@@ -1,0 +1,9 @@
+                                                    
+  data/raw/
+  db/*.db
+  .env
+  __pycache__/
+  *.pyc                                                                                        
+  .DS_Store
+  outputs/                                                                                     
+  venv/    

@@ -1,0 +1,15 @@
+pandas
+numpy
+requests
+pyarrow
+pandera
+pycountry
+scikit-learn
+xgboost
+shap
+matplotlib
+seaborn
+plotly
+streamlit
+statsmodels
+pytest
