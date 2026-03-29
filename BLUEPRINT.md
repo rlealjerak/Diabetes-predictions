@@ -143,8 +143,8 @@ diabetes-futures/
 │   ├── features/
 │   │   └── engineer.py         # Lags, rates of change, interactions
 │   ├── models/
-│   │   ├── baseline.py         # Linear, Ridge
-│   │   ├── advanced.py         # Random Forest, XGBoost
+│   │   ├── svm.py              # Support Vector Machine (SVR)
+│   │   ├── belief_network.py   # Bayesian Belief Network (pgmpy)
 │   │   └── evaluate.py         # Metrics, cross-validation
 │   ├── simulation/
 │   │   ├── scenarios.py        # Scenario definitions
@@ -334,15 +334,12 @@ simulate:
 
 ---
 
-## 7. Model Progression
+## 7. Models
 
-| Stage | Model | Purpose |
+| Model | Library | Purpose |
 |---|---|---|
-| Baseline | Pooled OLS Linear Regression | Establish baseline, understand linear relationships |
-| Baseline+ | Ridge Regression | Handle collinearity with regularization |
-| Intermediate | Random Forest | Capture non-linearities, quick feature importance |
-| **Primary** | **XGBoost** | Best performance, primary model for simulations |
-| Extended | Panel FE regression (statsmodels) | Econometrically proper for panel data |
+| **Support Vector Machine (SVR)** | `scikit-learn` (`SVR`) | Regression with kernel methods — handles non-linear relationships, works well with scaled features. Test RBF and linear kernels. |
+| **Bayesian Belief Network** | `pgmpy` | Probabilistic graphical model — encodes domain causal structure (BMI → glucose → diabetes, inactivity → BMI → diabetes). Provides interpretable conditional probabilities. |
 
 ### Evaluation
 - **GroupKFold** by country (5 folds) — all years of a country stay in same fold
@@ -379,7 +376,7 @@ A trained model is `f(features) → diabetes_prevalence`. To simulate:
 ## 9. Explainability (3 complementary methods)
 
 1. **Permutation importance** — `sklearn.inspection.permutation_importance` on test set
-2. **SHAP values** — `shap.TreeExplainer(model)` → summary beeswarm, dependence plots, force plots for specific countries
+2. **SHAP values** — `shap.KernelExplainer(model)` → summary beeswarm, dependence plots, force plots for specific countries
 3. **Partial Dependence Plots** — `sklearn.inspection.PartialDependenceDisplay` with ICE curves
 
 ### Deliverables
@@ -395,7 +392,7 @@ A trained model is `f(features) → diabetes_prevalence`. To simulate:
 
 ```
 pandas numpy requests pyarrow pandera pycountry
-scikit-learn xgboost shap
+scikit-learn pgmpy shap
 matplotlib seaborn plotly streamlit
 statsmodels pytest
 ```
@@ -404,35 +401,35 @@ statsmodels pytest
 
 ## 11. Development Timeline
 
-### MVP — Weeks 1–4
+### Iteration 1: WHO-only full pipeline
 
 | Week | Focus | Deliverables |
 |---|---|---|
-| **1** | Setup + Extraction | Repo structure, SQLite schema, WHO + World Bank + OWID extractors working |
-| **2** | Transform + Load | clean/normalize/merge/validate pipeline, `country_year_indicators` populated, EDA notebook |
-| **3** | Features + Models | Feature matrix, OLS → Ridge → RF → XGBoost trained, metrics compared |
-| **4** | Simulations + MVP ship | 5 scenarios × 10 countries, SHAP summary, README, push to GitHub |
+| **1** | Setup + WHO Extraction | Repo structure, SQLite schema, WHO extractor working |
+| **2** | Transform + Load | clean/normalize/validate pipeline (WHO only), `country_year_indicators` populated |
+| **3** | Features + Models | Feature matrix (WHO features), SVM + Bayesian Belief Network trained, metrics compared |
+| **4** | Simulations + first results | 5 scenarios × 10 countries, verify pipeline works end-to-end |
 
-### Extended — Weeks 5–8
+### Iteration 2: Expand data sources + polish
 
 | Week | Focus |
 |---|---|
-| **5** | CDC BRFSS ingestion, US state-level model + simulations |
-| **6** | Full explainability suite, IDF validation comparison, bootstrap CIs |
-| **7** | Streamlit dashboard (choropleth map, scenario sliders, SHAP waterfall) |
-| **8** | Tests, docs, methodology write-up, demo video, portfolio polish |
+| **5** | Add World Bank extraction, update transform/merge, retrain models |
+| **6** | Add OWID, retrain models, compare metrics improvement |
+| **7** | Explainability suite (SHAP, permutation importance, PDP), notebooks |
+| **8** | Streamlit dashboard, tests, docs, automation, portfolio polish |
 
 ---
 
-## 12. MVP vs Extended Summary
+## 12. Iteration 1 (WHO-only) vs Iteration 2 (Expanded) Summary
 
-| Component | MVP | Extended |
+| Component | Iteration 1 (WHO-only) | Iteration 2 (Expanded) |
 |---|---|---|
-| Sources | WHO + World Bank + OWID (3) | + IDF + CDC BRFSS (5) |
-| Granularity | Country-year | + US state-year |
-| Models | OLS, Ridge, RF, XGBoost | + Panel FE regression |
-| Simulations | 5 scenarios × 10 countries | All countries + US states |
-| Explainability | Feature importance + SHAP summary | + PDP, force plots, per-country |
+| Sources | WHO GHO (1) | + World Bank + OWID (3) |
+| Features | Health indicators only (BMI, glucose, inactivity) | + Socioeconomic (GDP, urbanization, health spending) |
+| Models | SVM, Bayesian Belief Network | Same models, retrained with richer features |
+| Simulations | 5 scenarios × 10 countries (health levers only) | + economic levers (health expenditure) |
+| Explainability | Basic metrics comparison | SHAP, permutation importance, PDP |
 | Dashboard | Notebooks only | Streamlit app |
 | Tests | None | pytest suite |
 
@@ -442,7 +439,7 @@ statsmodels pytest
 
 1. **Pipeline:** Run `make all` end-to-end — should produce populated SQLite DB with no errors
 2. **Data quality:** Check `country_year_indicators` has 150+ countries, 20+ years; pandera validation passes
-3. **Models:** XGBoost test-set RMSE should be lower than OLS baseline; R² > 0.7 is a reasonable target
+3. **Models:** SVM and Bayesian Belief Network produce valid metrics; R² > 0.7 is a reasonable target
 4. **Simulations:** Baseline 2030 projections should be within ±30% of IDF published estimates for major countries
 5. **Explainability:** SHAP values should sum to (prediction − base_value) for each row (built-in SHAP property)
 6. **Reproducibility:** Clone repo, run `pip install -r requirements.txt && make all` — should work from scratch
@@ -455,6 +452,6 @@ statsmodels pytest
 |---|---|
 | API downtime | Cache raw responses to `data/raw/`; pipeline reads from cache |
 | Sparse data for some countries | Filter to countries with ≥5 data points; report coverage |
-| Feature collinearity | Ridge regularization; SHAP handles correlated features |
+| Feature collinearity | SVM kernel handles implicitly; BN structure encodes dependencies |
 | Projection uncertainty | Confidence intervals; frame as "scenario analysis" not "prediction" |
-| Scope creep | MVP scoped to 4 weeks; extended features are additive |
+| Scope creep | Iteration 1 (WHO-only) scoped to 4 weeks; additional sources are additive |
