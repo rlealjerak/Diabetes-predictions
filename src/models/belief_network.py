@@ -9,7 +9,7 @@ df = pd.read_parquet("data/model_ready/global_features.parquet")
 train, test = temporal_split(df)
 
 # Discretize data 
-columns_to_use = ["mean_bmi", "raised_blood_glucose_pct", "physical_inactivity_pct", "ncd_mortality_prob", "diabetes_prev_agestd"]
+columns_to_use = ["mean_bmi", "raised_blood_glucose_pct", "physical_inactivity_pct", "ncd_mortality_prob", "diabetes_prev_agestd", "health_exp_per_capita", "gdp_per_capita_ppp", "urban_pop_pct"]
 
 # Drop NaN rows before discretizing data 
 train_clean = train[columns_to_use].dropna()
@@ -38,6 +38,9 @@ model = DiscreteBayesianNetwork([
     ("physical_inactivity_pct", "mean_bmi"),
     ("physical_inactivity_pct", "diabetes_prev_agestd"),
     ("ncd_mortality_prob", "diabetes_prev_agestd"),
+    ("gdp_per_capita_ppp", "health_exp_per_capita"),
+    ("health_exp_per_capita", "diabetes_prev_agestd"),
+    ("urban_pop_pct", "physical_inactivity_pct")
 ])
 
 # Fit the model to the training data 
@@ -66,6 +69,13 @@ y_pred = [midpoints["diabetes_prev_agestd"][p] for p in predictions]
 y_true = test_clean.loc[test_disc.dropna().index, "diabetes_prev_agestd"] 
 metrics = evaluate_model(y_true, y_pred)
 print(metrics)
+
+# Run causal queries 
+result = inference.query(
+    variables=["diabetes_prev_agestd"],
+    evidence={"health_exp_per_capita": "high"}
+)
+print(result)
 
 # Save model 
 with open("outputs/models/bn_model.pkl", "wb") as f:

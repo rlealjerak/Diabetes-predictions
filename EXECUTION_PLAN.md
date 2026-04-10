@@ -8,7 +8,7 @@ We have a fully designed project blueprint (see BLUEPRINT.md) for an end-to-end 
 - Models: **SVM** and **Bayesian Belief Network** (replacing OLS → Ridge → RF → XGBoost)
 - Iterative approach: get results first, then add data and automation
 
----
+---tad
 
 ## Phase 1: Project Scaffolding ✅ DONE
 **Goal:** Repo structure, dependencies, git init, database schema.

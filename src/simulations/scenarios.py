@@ -19,9 +19,13 @@ SCENARIOS = {
         "physical_inactivity_pct": 0.70, 
     }, 
 
-    "worst_case": { 
+    "worst_case": {
         "mean_bmi": 1.05,
         "physical_inactivity_pct": 1.20,  #20% increase in physical inactivity
+    },
+
+    "increase_health_expenditure_per_capita": {
+        "health_exp_per_capita": 1.25,  #25% increase in health expenditure per capita
     },
 }
 

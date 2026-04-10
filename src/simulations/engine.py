@@ -87,4 +87,5 @@ conn.close()
 # Save to CSV 
 results_df.to_csv("outputs/reports/simulation_results.csv", index=False) 
 
+pd.set_option('display.max_columns', None)  
 print(results_df.pivot_table(index=["iso3_code", "year"], columns="scenario", values="predicted_prevalence"))
