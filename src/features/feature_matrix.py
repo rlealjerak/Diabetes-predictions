@@ -49,9 +49,13 @@ df["inactivity_bmi_interaction"] = df["physical_inactivity_pct"] * df["mean_bmi"
 # Drop diabeted prevalence rows with missing target variable (diabetes_prevalence) value since we can't train on those 
 df = df.dropna(subset=["diabetes_prev_agestd"])
 
-# Drop rows with too many missing features (e.g. more than 50% missing) 
-feature_cols = [c for c in df.columns if c not in ("iso3_code", "year", "diabetes_prev_agestd")]                                                         
-df = df[df[feature_cols].notna().mean(axis=1) >= 0.5] 
+# Drop rows with too many missing features using a two-tier rule:
+# Keep rows where core WHO features are all present, OR overall coverage >= 30%
+feature_cols = [c for c in df.columns if c not in ("iso3_code", "year", "diabetes_prev_agestd")]
+core_who_features = ["mean_bmi", "raised_blood_glucose_pct", "physical_inactivity_pct"]
+has_core = df[core_who_features].notna().all(axis=1)
+has_30pct_coverage = df[feature_cols].notna().mean(axis=1) >= 0.3
+df = df[has_core | has_30pct_coverage]
 
 #Save the matrix into a parquet file for modeling
 df.to_parquet(output_path, index=False)

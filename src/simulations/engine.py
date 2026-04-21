@@ -8,12 +8,31 @@ from src.simulations.scenarios import SCENARIOS, TOP_COUNTRIES, PROJECTION_YEARS
 model = joblib.load("outputs/models/svm_model.pkl")
 scaler = joblib.load("outputs/models/svm_scaler.pkl") 
 
+# Load training medians for null value imputation in simulations
+training_medians = joblib.load("outputs/models/svm_training_medians.pkl")
+
+# Load feature bounds for extrapolation clamping in simulations
+feature_bounds = joblib.load("outputs/models/svm_feature_bounds.pkl")
+
 # Load the feature matrix 
 df = pd.read_parquet("data/model_ready/global_features.parquet") 
 
 # Get feature columns 
-feature_cols = [c for c in df.columns if c not in ("iso3_code", "year", "diabetes_prev_agestd")]
-
+selected_features = [ 
+    "mean_bmi",
+    "raised_blood_glucose_pct",
+    "physical_inactivity_pct",
+    "gdp_per_capita_ppp",
+    "health_exp_per_capita",
+    "life_expectancy",
+    "pop_65plus_pct",
+    "urban_pop_pct",
+    "overweight_pct",
+    "bmi_5yr_change",
+    "physical_inactivity_5yr_change",
+    "urban_pop_change_10yr",
+    "health_exp_relative",
+]
 # Extrapolate trends per country 
 def extrapolate_country(country_df, feature_cols, projection_years):
     """Fit linear trend on last 10 years, project to future years"""
@@ -29,6 +48,7 @@ def extrapolate_country(country_df, feature_cols, projection_years):
                 row[col] = coeffs[0] * year + coeffs[1]
             else: 
                 row[col] = country_df[col].iloc[-1] # fallback: last known value
+            row[col] = np.clip(row[col], feature_bounds.loc[col, 'min'], feature_bounds.loc[col, 'max']) # Clamp extrapolated values to training feature bounds to avoid extreme extrapolations
         rows.append(row)
     return pd.DataFrame(rows)  
     
@@ -41,7 +61,7 @@ for country in TOP_COUNTRIES:
         continue 
 
     # Extrapolate features to future years we want to predict on 
-    projected = extrapolate_country(country_df, feature_cols, PROJECTION_YEARS)
+    projected = extrapolate_country(country_df, selected_features, PROJECTION_YEARS)
 
     for scenario_name, multipliers in SCENARIOS.items():
         scenario_df = projected.copy()
@@ -55,13 +75,13 @@ for country in TOP_COUNTRIES:
         if "bmi_lag_5" in scenario_df.columns and "mean_bmi" in multipliers: 
             scenario_df["bmi_lag_5"] = scenario_df["bmi_lag_5"] * multipliers["mean_bmi"] 
             scenario_df["bmi_lag_10"] = scenario_df["bmi_lag_10"] * multipliers["mean_bmi"] 
-            scenario_df["bmi_5y_change"] = scenario_df["mean_bmi"] - scenario_df["bmi_lag_5"] 
+            scenario_df["bmi_5yr_change"] = scenario_df["mean_bmi"] - scenario_df["bmi_lag_5"] 
         if "glucose_bmi_interaction" in scenario_df.columns: 
             scenario_df["glucose_bmi_interaction"] = scenario_df["raised_blood_glucose_pct"] * scenario_df["mean_bmi"] 
             scenario_df["inactivity_bmi_interaction"] = scenario_df["physical_inactivity_pct"] * scenario_df["mean_bmi"] 
 
         # Handle null values and scale feature 
-        X = scenario_df[feature_cols].fillna(0)
+        X = scenario_df[selected_features].fillna(training_medians)
         X_scaled = scaler.transform(X) 
 
         # Predict diabetes prevalence
