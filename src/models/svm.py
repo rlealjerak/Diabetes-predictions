@@ -5,7 +5,7 @@ from sklearn.svm import SVR
 from src.models.evaluate import evaluate_model
 import joblib
 from sklearn.model_selection import GridSearchCV, GroupKFold
-
+from src.explainability.svm_visualizations import ( plot_actual_vs_predicted, feature_importance, plot_shap_beeswarm) 
 # Load feature matrix 
 df = pd.read_parquet("data/model_ready/global_features.parquet") 
 
@@ -72,6 +72,11 @@ print(f"Support vectors: {model.n_support_.sum()} / {len(y_train)}")
 y_pred = model.predict(X_test_scaled)
 metrics = evaluate_model(y_test, y_pred)
 print(metrics)
+
+# Visualize results 
+plot_actual_vs_predicted(y_test, y_pred)
+feature_importance(model, X_test_scaled, selected_features)
+plot_shap_beeswarm(model, X_test_scaled, selected_features) 
 
 # Save training medians (for null values in simulations)
 joblib.dump(X_train.median(), "outputs/models/svm_training_medians.pkl")
