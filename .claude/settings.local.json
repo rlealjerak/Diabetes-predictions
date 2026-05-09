@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git -C \"C:\\\\Users\\\\lealj\\\\documents\\\\project\" status)",
+      "Bash(pip --version)",
+      "Bash(python -c \"import sys; print\\(sys.executable\\)\")",
+      "Bash(where python3 *)",
+      "Bash(where py *)",
+      "Bash(where conda *)",
+      "Bash(where git *)",
+      "Bash(python -c \"import joblib, pandas as pd; data = joblib.load\\('outputs/models/bn_causal_queries.pkl'\\); print\\(type\\(data\\)\\); print\\(str\\(data\\)[:600]\\)\")",
+      "Bash(python -c \"import pandas as pd; df = pd.read_csv\\('outputs/reports/simulation_results.csv'\\); print\\(df.columns.tolist\\(\\)\\); print\\(df['year'].unique\\(\\)\\); print\\(df.head\\(3\\)\\)\")",
+      "Bash(python -c \"print\\(open\\('outputs/reports/pipeline_report.txt'\\).read\\(\\)[:1000]\\)\")",
+      "Bash(python -c \"import joblib; m = joblib.load\\('outputs/models/svm_model.pkl'\\); print\\(type\\(m\\)\\); print\\(hasattr\\(m,'best_score_'\\)\\); print\\(hasattr\\(m,'best_params_'\\)\\)\")",
+      "PowerShell(New-Item *)"
+    ]
+  }
+}

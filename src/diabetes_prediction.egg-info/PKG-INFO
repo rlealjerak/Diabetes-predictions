@@ -17,3 +17,7 @@ Requires-Dist: plotly
 Requires-Dist: streamlit
 Requires-Dist: statsmodels
 Requires-Dist: pytest
+Requires-Dist: pgmpy
+Requires-Dist: joblib
+Requires-Dist: ipykernel
+Requires-Dist: notebook

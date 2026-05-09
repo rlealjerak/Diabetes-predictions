@@ -1,0 +1,48 @@
+============================================================
+PIPELINE REPORT
+Generated on: 2026-05-09 17:43:07
+============================================================
+
+--- SVM Metrics ---
+  RMSE  : 3.0258
+  MAE   : 2.0815
+  R2    : 0.8156
+  MAPE  : 15.6431
+
+--- Top 10 Features by Permutation Importance ---
+   1. raised_blood_glucose_pct            5.4049
+   2. overweight_pct                      1.8918
+   3. mean_bmi                            1.7792
+   4. health_exp_per_capita               1.3175
+   5. urban_pop_pct                       0.6718
+   6. pop_65plus_pct                      0.5826
+   7. physical_inactivity_pct             0.5743
+   8. gdp_per_capita_ppp                  0.5476
+   9. urban_pop_change_10yr               0.3588
+  10. health_exp_relative                 0.2853
+
+--- Belief Network Metrics ---
+  RMSE  : 6.4169
+  MAE   : 4.6814
+  R2    : 0.0452
+  MAPE  : 38.8301
+
+--- Strongest BN Causal Relationships ---
+  mean_bmi                            delta P(diabetes='high'): +0.255
+  raised_blood_glucose_pct            delta P(diabetes='high'): +0.481
+  physical_inactivity_pct             delta P(diabetes='high'): +0.253
+  health_exp_per_capita               delta P(diabetes='high'): +0.099
+
+--- Simulation Summary at 2050 ---
+scenario   baseline  combined_intervention  increase_health_expenditure_per_capita  increase_physical_activity  reduce_bmi_5pct  reduce_glucose_10pct  worst_case
+iso3_code                                                                                                                                                        
+BRA           17.32                  17.25                                   17.21                       16.26            18.81                 17.20       17.17
+CHN           13.36                  15.01                                   12.57                       14.31            14.87                 12.81       11.52
+DEU           15.21                  14.94                                   16.08                       15.36            14.53                 15.52       16.07
+GBR           12.45                  12.63                                   12.24                       12.58            12.30                 12.73       12.85
+IDN           15.93                  15.65                                   15.83                       14.87            17.26                 15.62       15.60
+IND           28.27                  25.58                                   28.18                       24.77            30.04                 27.65       28.65
+JPN            7.12                   8.04                                    5.03                        7.15             8.70                  6.62        6.00
+MEX           19.80                  20.31                                   19.56                       19.31            21.22                 19.75       19.21
+NGA           10.31                  10.25                                   10.31                        9.98            11.09                  9.95       10.01
+USA           23.43                  23.97                                   25.16                       24.52            22.49                 23.89       23.85

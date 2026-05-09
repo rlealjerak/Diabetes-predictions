@@ -52,7 +52,7 @@ df_wide = df_wide.drop(columns=['dim1'])
 
 # Perform linear interpolation to fill in missing values for each indicator (WHO dataset) 
 df_wide = df_wide.sort_values(['iso3_code', 'year'])
-df_wide = df_wide.groupby('iso3_code').apply(lambda group: group.interpolate(method='linear', limit=2)).reset_index(drop=True)
+df_wide = df_wide.groupby('iso3_code', group_keys=False).apply(lambda group: group.interpolate(method='linear', limit=2)).reset_index(drop=True)
 
 # Exclude rows were the year < 1990 (WHO dataset) 
 df_wide = df_wide[df_wide['year'] >= 1990]

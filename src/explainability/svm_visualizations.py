@@ -6,6 +6,8 @@ from sklearn.inspection import permutation_importance, PartialDependenceDisplay
 import pandas as pd 
 import shap 
 import numpy as np 
+import joblib 
+from src.models.svm import load_svm_data
 
 # Define function to create scatter plot 
 def plot_actual_vs_predicted(y_test, y_pred): 
@@ -14,7 +16,7 @@ def plot_actual_vs_predicted(y_test, y_pred):
     r2 = r2_score(y_test, y_pred) 
     rmse = mean_squared_error(y_test, y_pred) ** 0.5
 
-    fig, ax = plt.subplots(figsize=(8,6)) 
+    fig,ax = plt.subplots(figsize=(8,6)) 
 
     ax.scatter(y_test, y_pred, alpha=0.5, edgecolors='k', linewidths=0.3)
 
@@ -38,7 +40,7 @@ def plot_actual_vs_predicted(y_test, y_pred):
 
 # Plot feature importance 
 def feature_importance(result, feature_names):
-    
+    os.makedirs("outputs/figures/", exist_ok=True)
     importance_df = pd.DataFrame({
         'feature': feature_names,
         'importance': result.importances_mean,
@@ -60,11 +62,11 @@ def feature_importance(result, feature_names):
     plt.close()
 
 # Shap plot 
-def plot_shap_beeswarm(model, X_test_scaled, feature_names, n_background=100, n_explain=100): 
+def plot_shap_beeswarm(model, X_train_scaled, X_test_scaled, feature_names, n_background=100, n_explain=100):
     os.makedirs("outputs/figures/", exist_ok=True)
 
-    # Background: summarize training distribution with k-means 
-    background = shap.kmeans(X_test_scaled, n_background) 
+    # Background: summarize training distribution with k-means
+    background = shap.kmeans(X_train_scaled, n_background)
 
     # Explainer: wraps any model using black-box perturbations 
     explainer = shap.KernelExplainer(model.predict, background)
@@ -125,8 +127,33 @@ def plot_partial_dependencies(model, X_train_scaled, feature_names, importance_r
         n_jobs=-1
     )
 
-    display.figure__.suptitle("Partial Dependence Plots (Top 3 Features), y=1.02")
+    display.figure_.suptitle("Partial Dependence Plots (Top 3 Features)", y=1.02)
     plt.tight_layout()
     plt.savefig("outputs/figures/svm_partial_dependence.png", dpi=150,
   bbox_inches='tight') 
     plt.close() 
+
+if __name__ == "__main__":
+    # Load saved model and scaler
+    model = joblib.load("outputs/models/svm_model.pkl")
+    scaler = joblib.load("outputs/models/svm_scaler.pkl")
+
+    # Load data and prepare test set
+    X_train, X_test, y_train, y_test, feature_names, train = load_svm_data()
+
+    # Scale features
+    X_train_scaled = scaler.transform(X_train)
+    X_test_scaled = scaler.transform(X_test)
+    y_pred = model.predict(X_test_scaled)
+
+    # Load permutation importance results for plotting
+    perm_result = joblib.load("outputs/models/svm_permutation_importance.pkl")
+
+    # Visualize results
+    plot_actual_vs_predicted(y_test, y_pred)
+    feature_importance(perm_result, feature_names)
+    plot_residual_analysis(y_test, y_pred)
+    plot_partial_dependencies(model, X_train_scaled, feature_names, perm_result)
+    plot_shap_beeswarm(model, X_train_scaled, X_test_scaled, feature_names)
+
+

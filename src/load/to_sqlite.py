@@ -1,6 +1,5 @@
-import pyarrow.parquet as pq
 import sqlite3
-import pandas as pd 
+import pandas as pd
 
 # Load the clean parquet file and load it to SQLite database 
 df = pd.read_parquet('data/processed/country_year_panel.parquet')

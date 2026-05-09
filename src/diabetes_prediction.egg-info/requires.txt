@@ -13,3 +13,7 @@ plotly
 streamlit
 statsmodels
 pytest
+pgmpy
+joblib
+ipykernel
+notebook

@@ -11,7 +11,7 @@ def evaluate_model(y_true, y_pred):
         "rmse": np.sqrt(mean_squared_error(y_true, y_pred)),
         "mae": mean_absolute_error(y_true, y_pred),
         "r2": r2_score(y_true, y_pred),
-        "mape": np.mean(np.abs((y_true - y_pred) / y_true)) * 100  
+        "mape": np.nanmean(np.abs(np.where(y_true != 0, (y_true - y_pred) / y_true, np.nan))) * 100
     }
 
 # Temporal split to train on older data and test on more recent data 
